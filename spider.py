@@ -5,12 +5,15 @@ import pymongo
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
 import multiprocessing
+from urllib3.exceptions import InsecureRequestWarning
 
+# Suppress only the single warning from urllib3 needed.
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s: %(message)s')
 
-BASE_URL = 'https://ssr1.scrape.center'
+BASE_URL = 'https://ssr2.scrape.center'
 TOTAL_PAGE = 10
 MONGO_CONNECTION_STRING = 'mongodb://localhost:27017'
 MONGO_DB_NAME = 'movies'
@@ -29,10 +32,11 @@ def scrape_page(url):
     """
     logging.info('scraping %s...', url)
     try:
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
         if response.status_code == 200:
             return response.text
-        logging.error('get invalid status code %s while scraping %s', response.status_code, url)
+        logging.error('get invalid status code %s while scraping %s',
+                      response.status_code, url)
     except requests.RequestException:
         logging.error('error occurred while scraping %s', url, exc_info=True)
 
@@ -80,7 +84,8 @@ def parse_detail(html):
     doc = pq(html)
     cover = doc('img.cover').attr('src')
     name = doc('a > h2').text()
-    categories = [item.text() for item in doc('.categories button span').items()]
+    categories = [item.text()
+                  for item in doc('.categories button span').items()]
     published_at = doc('.info:contains(上映)').text()
     published_at = re.search('(\d{4}-\d{2}-\d{2})', published_at).group(1) \
         if published_at and re.search('\d{4}-\d{2}-\d{2}', published_at) else None
