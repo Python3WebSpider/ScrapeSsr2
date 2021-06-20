@@ -1,6 +1,6 @@
-# ScrapeStatic1
+# ScrapeSsr2
 
-Spider for https://ssr1.scrape.center/
+Spider for https://ssr2.scrape.center/
 
 ## PyQuery + MongoDB + 多进程版
 
